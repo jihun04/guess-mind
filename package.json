@@ -17,13 +17,17 @@
   },
   "homepage": "https://github.com/jihun04/guess-mind#readme",
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "nodemon": "^2.0.7",
+    "prettier": "^2.3.1"
   },
   "dependencies": {
     "@babel/core": "^7.14.5",
     "@babel/node": "^7.14.5",
     "@babel/preset-env": "^7.14.5",
     "express": "^4.17.1",
+    "morgan": "^1.10.0",
     "pug": "^3.0.2",
     "socket.io": "^4.1.2"
   }
