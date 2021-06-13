@@ -1,0 +1,14 @@
+$color: red;
+
+body {
+  background-color: $color;
+}
+
+@keyframes a {
+  from {
+    color: blue;
+  }
+  to {
+    color: green;
+  }
+}
