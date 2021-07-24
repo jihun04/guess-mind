@@ -1,3 +1,4 @@
+import socketController from "../../src/socketController";
 import { getSocket } from "./sockets";
 
 const canvas = document.getElementById("jsCanvas");
@@ -6,7 +7,7 @@ const mode = document.getElementById("jsMode");
 
 const ctx = canvas.getContext("2d");
 
-const INITIAL_COLOR = "#2c2c2c";
+let INITIAL_COLOR = "#2c2c2c";
 
 canvas.width = 450;
 canvas.height = 450;
@@ -41,17 +42,20 @@ function onMouseMove(e) {
     const y = e.offsetY;
     if (painting) {
       strokePath(x, y);
-      getSocket().emit(window.events.strokePath, { x, y });
-    } else {
+      getSocket().emit(window.events.strokePath, {
+        x,
+        y,
+        color: ctx.strokeStyle,
+      });
     }
   }
 }
 
 function handleColorClick() {
-  const color = this.style.backgroundColor;
+  const target = this;
+  const color = target.style.backgroundColor;
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
-  getSocket().emit(window.events.changeColor, { color });
   target.classList.add("controls__color--click");
   target.addEventListener("transitionend", () => {
     target.classList.remove("controls__color--click");
@@ -69,9 +73,14 @@ function handleModeClick() {
   }
 }
 
+function fill() {
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 function handleCanvasClick() {
   if (filling) {
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    fill();
+    getSocket().emit(window.events.fill, { color: ctx.fillStyle });
   }
 }
 
@@ -92,4 +101,15 @@ export const handleBeganPath = ({ x, y }) => {
   ctx.beginPath();
   ctx.moveTo(x, y);
 };
-export const handleStrokedPath = ({ x, y }) => strokePath(x, y);
+export const handleStrokedPath = ({ x, y, color = null }) => {
+  const currentColor = ctx.strokeStyle;
+  if (color !== null) ctx.strokeStyle = color;
+  strokePath(x, y);
+  ctx.strokeStyle = currentColor;
+};
+export const handleFilled = ({ color = null }) => {
+  const currentColor = ctx.fillStyle;
+  if (color !== null) ctx.fillStyle = color;
+  fill();
+  ctx.fillStyle = currentColor;
+};
