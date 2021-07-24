@@ -1,47 +1,57 @@
+import { getSocket } from "./sockets";
+
 const canvas = document.getElementById("jsCanvas");
-const ctx = canvas.getContext("2d");
 const colors = document.getElementsByClassName("jsColor");
 const mode = document.getElementById("jsMode");
 
-const INITIAL_COLOR = "#2c2c2c",
-  CANVAS_SIZE = 450;
+const ctx = canvas.getContext("2d");
 
-canvas.width = CANVAS_SIZE;
-canvas.height = CANVAS_SIZE;
+const INITIAL_COLOR = "#2c2c2c";
+
+canvas.width = 450;
+canvas.height = 450;
+
+ctx.lineWidth = 2.5;
 ctx.fillStyle = "white";
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 ctx.strokeStyle = INITIAL_COLOR;
 ctx.fillStyle = INITIAL_COLOR;
-ctx.lineWidth = 2.5;
 
-let painting = false,
-  filling = false;
+let painting = false;
+let filling = false;
+
+function startPainting(e) {
+  ctx.beginPath();
+  getSocket().emit(window.events.beginPath, { x: e.offsetX, y: e.offsetY });
+  painting = true;
+}
 
 function stopPainting() {
   painting = false;
 }
 
-function startPainting() {
-  painting = true;
-}
+const strokePath = (x, y) => {
+  ctx.lineTo(x, y);
+  ctx.stroke();
+};
 
-function onMouseMove(event) {
-  const x = event.offsetX;
-  const y = event.offsetY;
-  if (!painting) {
-    ctx.moveTo(x, y);
-  } else {
-    ctx.lineTo(x, y);
-    ctx.stroke();
+function onMouseMove(e) {
+  if (!filling) {
+    const x = e.offsetX;
+    const y = e.offsetY;
+    if (painting) {
+      strokePath(x, y);
+      getSocket().emit(window.events.strokePath, { x, y });
+    } else {
+    }
   }
 }
 
 function handleColorClick() {
-  const target = this;
-  const color = target.style.backgroundColor;
-  ctx.beginPath();
+  const color = this.style.backgroundColor;
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
+  getSocket().emit(window.events.changeColor, { color });
   target.classList.add("controls__color--click");
   target.addEventListener("transitionend", () => {
     target.classList.remove("controls__color--click");
@@ -74,10 +84,12 @@ if (canvas) {
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 }
 
-for (const color of colors) {
-  color.addEventListener("click", handleColorClick);
-}
+for (const color of colors) color.addEventListener("click", handleColorClick);
 
-if (mode) {
-  mode.addEventListener("click", handleModeClick);
-}
+if (mode) mode.addEventListener("click", handleModeClick);
+
+export const handleBeganPath = ({ x, y }) => {
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+};
+export const handleStrokedPath = ({ x, y }) => strokePath(x, y);
