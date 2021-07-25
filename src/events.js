@@ -1,6 +1,8 @@
 const events = {
   setNickname: "setNickname",
   newUser: "newUser",
+  loggedIn: "loggedIn",
+  unauthenticated: "unauthenticated",
   disconnect: "disconnect",
   disconnected: "disconnected",
   sendMsg: "sendMsg",

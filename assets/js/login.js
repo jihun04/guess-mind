@@ -1,3 +1,4 @@
+import { handleUnauthenticated } from "./notifications";
 import { initSockets } from "./sockets";
 
 const body = document.body;
@@ -12,9 +13,15 @@ const nickname = localStorage.getItem(NICKNAME);
 const logIn = (nickname) => {
   const socket = io("/");
   socket.emit(window.events.setNickname, { nickname });
-  initSockets(socket);
-  body.className = LOGGED_IN;
-}
+  socket.on(window.events.loggedIn, () => {
+    localStorage.setItem(NICKNAME, value);
+    initSockets(socket);
+    body.className = LOGGED_IN;
+  });
+  socket.on(window.events.unauthenticated, () => {
+    handleUnauthenticated(nickname);
+  });
+};
 
 if (nickname === null) {
   body.className = LOGGED_OUT;
@@ -22,14 +29,13 @@ if (nickname === null) {
   logIn(nickname);
 }
 
-const handleFormSubmit = e => {
+const handleFormSubmit = (e) => {
   e.preventDefault();
   const input = loginForm.querySelector("input");
   const { value } = input;
   input.value = "";
-  localStorage.setItem(NICKNAME, value);
   logIn(value);
-}
+};
 
 if (loginForm) {
   loginForm.addEventListener("submit", handleFormSubmit);
