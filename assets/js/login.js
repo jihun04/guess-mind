@@ -14,12 +14,13 @@ const logIn = (nickname) => {
   const socket = io("/");
   socket.emit(window.events.setNickname, { nickname });
   socket.on(window.events.loggedIn, () => {
-    localStorage.setItem(NICKNAME, value);
+    localStorage.setItem(NICKNAME, nickname);
     initSockets(socket);
     body.className = LOGGED_IN;
   });
   socket.on(window.events.unauthenticated, () => {
     handleUnauthenticated(nickname);
+    localStorage.removeItem(NICKNAME);
   });
 };
 

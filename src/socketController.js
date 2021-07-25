@@ -3,8 +3,11 @@ import events from "./events";
 let sockets = [];
 let nicknames = [];
 
-const socketController = (socket) => {
+const socketController = (socket, io) => {
   const broadcast = (event, data) => socket.broadcast.emit(event, data);
+  const superBroadcast = (event, data) => io.emit(event, data);
+  const sendPlayerUpdate = () =>
+    superBroadcast(events.playerUpdate, { sockets });
 
   socket.on(events.setNickname, ({ nickname }) => {
     if (!nicknames.includes(nickname)) {
@@ -13,6 +16,7 @@ const socketController = (socket) => {
       sockets.push({ id: socket.id, points: 0, nickname: nickname });
       socket.emit(events.loggedIn);
       broadcast(events.newUser, { nickname });
+      sendPlayerUpdate();
     } else {
       socket.emit(events.unauthenticated);
     }
@@ -25,7 +29,12 @@ const socketController = (socket) => {
         sockets.findIndex((aSocket) => aSocket.id == socket.id),
         1
       );
-      nicknames.splice(socket.nickname, 1);
+      // splice는 start를 string으로 찾으면 그 string이 포함되어 있는 첫 번째 것으로 해줌
+      nicknames.splice(
+        nicknames.findIndex((nickname) => nickname == socket.nickname),
+        1
+      );
+      sendPlayerUpdate();
     }
   });
 
@@ -45,7 +54,5 @@ const socketController = (socket) => {
     broadcast(events.filled, { color });
   });
 };
-
-setInterval(() => console.log(sockets), 3000);
 
 export default socketController;
