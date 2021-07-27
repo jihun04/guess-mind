@@ -1,3 +1,10 @@
+import {
+  disableCanvas,
+  enableCanvas,
+  hideCanvasControls,
+  showCanvasControls,
+} from "./paint";
+
 const board = document.getElementById("jsPBoard");
 
 const addPlayers = (players) => {
@@ -10,3 +17,11 @@ const addPlayers = (players) => {
 };
 
 export const handlePlayerUpdate = ({ sockets }) => addPlayers(sockets);
+export const handleGameStarted = () => {
+  disableCanvas();
+  hideCanvasControls();
+};
+export const handleLeaderNotif = ({ word }) => {
+  enableCanvas();
+  showCanvasControls();
+};

@@ -2,6 +2,7 @@ import socketController from "../../src/socketController";
 import { getSocket } from "./sockets";
 
 const canvas = document.getElementById("jsCanvas");
+const controls = document.getElementById("jsControls");
 const colors = document.getElementsByClassName("jsColor");
 const mode = document.getElementById("jsMode");
 
@@ -84,15 +85,6 @@ function handleCanvasClick() {
   }
 }
 
-if (canvas) {
-  canvas.addEventListener("mousemove", onMouseMove);
-  canvas.addEventListener("mousedown", startPainting);
-  canvas.addEventListener("mouseup", stopPainting);
-  canvas.addEventListener("mouseleave", stopPainting);
-  canvas.addEventListener("click", handleCanvasClick);
-  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-}
-
 for (const color of colors) color.addEventListener("click", handleColorClick);
 
 if (mode) mode.addEventListener("click", handleModeClick);
@@ -113,3 +105,28 @@ export const handleFilled = ({ color = null }) => {
   fill();
   ctx.fillStyle = currentColor;
 };
+
+export const disableCanvas = () => {
+  canvas.removeEventListener("mousemove", onMouseMove);
+  canvas.removeEventListener("mousedown", startPainting);
+  canvas.removeEventListener("mouseup", stopPainting);
+  canvas.removeEventListener("mouseleave", stopPainting);
+  canvas.removeEventListener("click", handleCanvasClick);
+};
+
+export const enableCanvas = () => {
+  canvas.addEventListener("mousemove", onMouseMove);
+  canvas.addEventListener("mousedown", startPainting);
+  canvas.addEventListener("mouseup", stopPainting);
+  canvas.addEventListener("mouseleave", stopPainting);
+  canvas.addEventListener("click", handleCanvasClick);
+};
+
+export const hideCanvasControls = () => (controls.style.display = "none");
+
+export const showCanvasControls = () => (controls.style.display = "block");
+
+if (canvas) {
+  enableCanvas();
+  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+}

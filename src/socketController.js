@@ -1,13 +1,30 @@
 import events from "./events";
+import { chooseWord } from "./words";
 
 let sockets = [];
 let nicknames = [];
+let inProgress = false;
+let word = null;
+
+const chooseLeader = () => sockets[Math.floor(Math.random() * sockets.length)];
 
 const socketController = (socket, io) => {
   const broadcast = (event, data) => socket.broadcast.emit(event, data);
   const superBroadcast = (event, data) => io.emit(event, data);
   const sendPlayerUpdate = () =>
     superBroadcast(events.playerUpdate, { sockets });
+  const startGame = () => {
+    if (inProgress == false) {
+      inProgress = true;
+      const leader = chooseLeader();
+      word = chooseWord();
+      setTimeout(() => {
+        superBroadcast(events.gameStarted);
+        io.to(leader.id).emit(events.leaderNotif, { word });
+      }, 2000);
+    }
+  };
+  const endGame = () => (inProgress = false);
 
   socket.on(events.setNickname, ({ nickname }) => {
     if (!nicknames.includes(nickname)) {
@@ -17,25 +34,20 @@ const socketController = (socket, io) => {
       socket.emit(events.loggedIn);
       broadcast(events.newUser, { nickname });
       sendPlayerUpdate();
+      if (sockets.length > 1) {
+        startGame();
+      }
     } else {
       socket.emit(events.unauthenticated);
     }
   });
 
   socket.on(events.disconnect, () => {
-    if (socket.nickname) {
-      broadcast(events.disconnected, { nickname: socket.nickname });
-      sockets.splice(
-        sockets.findIndex((aSocket) => aSocket.id == socket.id),
-        1
-      );
-      // splice는 start를 string으로 찾으면 그 string이 포함되어 있는 첫 번째 것으로 해줌
-      nicknames.splice(
-        nicknames.findIndex((nickname) => nickname == socket.nickname),
-        1
-      );
-      sendPlayerUpdate();
-    }
+    broadcast(events.disconnected, { nickname: socket.nickname });
+    sockets = sockets.filter((aSocket) => aSocket.id != socket.id);
+    nicknames = nicknames.filter((nickname) => nickname != socket.nickname);
+    if (sockets.length == 1) endGame;
+    sendPlayerUpdate();
   });
 
   socket.on(events.sendMsg, ({ message }) => {
