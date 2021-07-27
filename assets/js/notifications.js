@@ -18,7 +18,7 @@ export const handleDisconnected = ({ nickname }) => {
 
 export const handleUnauthenticated = (nickname) => {
   fireNotification(
-    `${nickname} is already exist nickname!`,
+    `${nickname} is already existent nickname!`,
     "rgba(44, 44, 44, 0.5)"
   );
 };
