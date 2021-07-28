@@ -5,6 +5,7 @@ let sockets = [];
 let nicknames = [];
 let inProgress = false;
 let word = null;
+let leader = null;
 
 const chooseLeader = () => sockets[Math.floor(Math.random() * sockets.length)];
 
@@ -16,7 +17,7 @@ const socketController = (socket, io) => {
   const startGame = () => {
     if (inProgress == false) {
       inProgress = true;
-      const leader = chooseLeader();
+      leader = chooseLeader();
       word = chooseWord();
       setTimeout(() => {
         superBroadcast(events.gameStarted);
@@ -24,7 +25,10 @@ const socketController = (socket, io) => {
       }, 2000);
     }
   };
-  const endGame = () => (inProgress = false);
+  const endGame = () => {
+    inProgress = false;
+    superBroadcast(events.gameEnded, { word });
+  };
 
   socket.on(events.setNickname, ({ nickname }) => {
     if (!nicknames.includes(nickname)) {
@@ -46,7 +50,11 @@ const socketController = (socket, io) => {
     broadcast(events.disconnected, { nickname: socket.nickname });
     sockets = sockets.filter((aSocket) => aSocket.id != socket.id);
     nicknames = nicknames.filter((nickname) => nickname != socket.nickname);
-    if (sockets.length == 1) endGame;
+    if (sockets.length == 1) {
+      endGame();
+    } else if (leader) {
+      if (socket.id == leader.id) endGame();
+    }
     sendPlayerUpdate();
   });
 

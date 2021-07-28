@@ -9,6 +9,7 @@ const mode = document.getElementById("jsMode");
 const ctx = canvas.getContext("2d");
 
 let INITIAL_COLOR = "#2c2c2c";
+let saveLink = null;
 
 canvas.width = 450;
 canvas.height = 450;
@@ -74,8 +75,11 @@ function handleModeClick() {
   }
 }
 
-function fill() {
+function fill(color = null) {
+  const currentColor = ctx.fillStyle;
+  if (color !== null) ctx.fillStyle = color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = currentColor;
 }
 
 function handleCanvasClick() {
@@ -99,12 +103,7 @@ export const handleStrokedPath = ({ x, y, color = null }) => {
   strokePath(x, y);
   ctx.strokeStyle = currentColor;
 };
-export const handleFilled = ({ color = null }) => {
-  const currentColor = ctx.fillStyle;
-  if (color !== null) ctx.fillStyle = color;
-  fill();
-  ctx.fillStyle = currentColor;
-};
+export const handleFilled = ({ color }) => fill(color);
 
 export const disableCanvas = () => {
   canvas.removeEventListener("mousemove", onMouseMove);
@@ -124,9 +123,17 @@ export const enableCanvas = () => {
 
 export const hideCanvasControls = () => (controls.style.display = "none");
 
-export const showCanvasControls = () => (controls.style.display = "block");
+export const showCanvasControls = () => (controls.style.display = "flex");
+
+export const saveAnchor = (word) => {
+  saveLink = document.createElement("a");
+  saveLink.download = `${word}.png`;
+  saveLink.href = canvas.toDataURL();
+};
+
+export const resetCanvas = () => fill("#fff");
 
 if (canvas) {
-  enableCanvas();
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+  hideCanvasControls();
 }
