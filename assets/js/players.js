@@ -29,7 +29,6 @@ export const handlePlayerUpdate = ({ sockets }) => addPlayers(sockets);
 export const handleGameStarted = () => {
   disableCanvas();
   hideCanvasControls();
-  enableChat();
   setNotifs("");
 };
 export const handleLeaderNotif = ({ word }) => {
@@ -44,5 +43,6 @@ export const handleGameEnded = ({ word, leaderNickname }) => {
   disableCanvas();
   hideCanvasControls();
   resetCanvas();
+  enableChat();
 };
 export const handleGameStarting = () => setNotifs("Game will start soon");
