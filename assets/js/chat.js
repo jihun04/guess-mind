@@ -2,11 +2,14 @@ import { getSocket } from "./sockets";
 
 const messages = document.getElementById("jsMessages");
 const sendMsg = document.getElementById("jsSendMsg");
+const chatInput = sendMsg.querySelector("input");
 
 const appendMsg = (text, nickname) => {
   const li = document.createElement("li");
   li.innerHTML = `
-      <span class="author ${nickname ? "out" : "self"}">${nickname ? nickname : "You"}:</span> ${text}
+      <span class="author ${nickname ? "out" : "self"}">${
+    nickname ? nickname : "You"
+  }:</span> ${text}
     `;
   messages.appendChild(li);
   messages.scroll(0, messages.scrollHeight);
@@ -14,16 +17,18 @@ const appendMsg = (text, nickname) => {
 
 const handleSendMsg = (e) => {
   e.preventDefault();
-  const input = sendMsg.querySelector("input");
-  const { value } = input;
-  getSocket().emit(window.events.sendMsg, { message: value })
-  input.value = "";
+  const { value } = chatInput;
+  getSocket().emit(window.events.sendMsg, { message: value });
+  chatInput.value = "";
   appendMsg(value);
 };
 
-export const handleNewMsg = ({ message, nickname }) => 
+export const handleNewMsg = ({ message, nickname }) =>
   appendMsg(message, nickname);
 
 if (sendMsg) {
-  sendMsg.addEventListener("submit",handleSendMsg);
+  sendMsg.addEventListener("submit", handleSendMsg);
 }
+
+export const disableChat = () => (chatInput.disabled = true);
+export const enableChat = () => (chatInput.disabled = false);

@@ -1,3 +1,5 @@
+import { disableChat, enableChat } from "./chat";
+import { NICKNAME } from "./login";
 import {
   disableCanvas,
   enableCanvas,
@@ -27,17 +29,20 @@ export const handlePlayerUpdate = ({ sockets }) => addPlayers(sockets);
 export const handleGameStarted = () => {
   disableCanvas();
   hideCanvasControls();
+  enableChat();
   setNotifs("");
 };
 export const handleLeaderNotif = ({ word }) => {
   enableCanvas();
   showCanvasControls();
+  disableChat();
   setNotifs(`You are the leader, paint: ${word}`);
 };
-export const handleGameEnded = ({ word }) => {
+export const handleGameEnded = ({ word, leaderNickname }) => {
   setNotifs("Game ended.");
-  saveAnchor(word);
+  if (localStorage.getItem(NICKNAME) === leaderNickname) saveAnchor(word);
   disableCanvas();
   hideCanvasControls();
   resetCanvas();
 };
+export const handleGameStarting = () => setNotifs("Game will start soon");
