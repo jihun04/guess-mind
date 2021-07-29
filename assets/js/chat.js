@@ -30,5 +30,11 @@ if (sendMsg) {
   sendMsg.addEventListener("submit", handleSendMsg);
 }
 
-export const disableChat = () => (chatInput.disabled = true);
-export const enableChat = () => (chatInput.disabled = false);
+export const disableChat = () => {
+  chatInput.disabled = true;
+  chatInput.style.cursor = "not-allowed";
+};
+export const enableChat = () => {
+  chatInput.disabled = false;
+  chatInput.style.cursor = "text";
+};

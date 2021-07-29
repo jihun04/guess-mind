@@ -25,7 +25,7 @@ const setNotifs = (text) => {
   notifs.innerText = text;
 };
 
-export const handlePlayerUpdate = ({ sockets }) => addPlayers(sockets);
+export const handlePlayerUpdate = ({ players }) => addPlayers(players);
 export const handleGameStarted = () => {
   disableCanvas();
   hideCanvasControls();
@@ -46,3 +46,5 @@ export const handleGameEnded = ({ word, leaderNickname }) => {
   enableChat();
 };
 export const handleGameStarting = () => setNotifs("Game will start soon");
+export const handleTimeUpdate = ({ timeleft }) =>
+  setNotifs(`Time left: ${timeleft}`);

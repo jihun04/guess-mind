@@ -1,51 +1,74 @@
 import events from "./events";
 import { chooseWord } from "./words";
 
+let players = [];
 let sockets = [];
 let nicknames = [];
 let inProgress = false;
 let word = null;
 let leader = null;
-let timeout = null;
+let timeleft = 0;
+let interval = null;
 
-const chooseLeader = () => sockets[Math.floor(Math.random() * sockets.length)];
+const chooseLeader = () => players[Math.floor(Math.random() * players.length)];
 
 const socketController = (socket, io) => {
   const broadcast = (event, data) => socket.broadcast.emit(event, data);
   const superBroadcast = (event, data) => io.emit(event, data);
   const sendPlayerUpdate = () =>
-    superBroadcast(events.playerUpdate, { sockets });
+    superBroadcast(events.playerUpdate, { players });
+  const handleTimeleft = () => {
+    io.to("not leader").emit(events.timeUpdate, { timeleft });
+    timeleft -= 1;
+  };
   const startGame = () => {
-    if (inProgress == false && sockets.length > 1) {
+    if (inProgress === false && players.length > 1) {
       inProgress = true;
       leader = chooseLeader();
       word = chooseWord();
+      if (leader) {
+        sockets.forEach((aSocket) => {
+          if (aSocket.id !== leader.id) aSocket.join("not leader");
+        });
+      }
       superBroadcast(events.gameStarting);
       setTimeout(() => {
         superBroadcast(events.gameStarted);
         io.to(leader.id).emit(events.leaderNotif, { word });
-        timeout = setTimeout(endGame, 30000);
+        timeleft = 40;
+        handleTimeleft();
+        if (interval === null) {
+          interval = setInterval(() => {
+            if (timeleft === 0) endGame();
+            handleTimeleft();
+          }, 1000);
+        }
       }, 5000);
     }
   };
   const endGame = () => {
     inProgress = false;
+    if (leader) {
+      sockets.forEach((aSocket) => {
+        if (aSocket.id !== leader.id) aSocket.leave("not leader");
+      });
+    }
     superBroadcast(events.gameEnded, {
       word,
       leaderNickname: `${leader ? leader.nickname : null}`,
     });
-    if (timeout) {
-      clearTimeout(timeout);
-      timeout = null;
+    if (interval !== null) {
+      clearInterval(interval);
+      interval = null;
     }
     setTimeout(() => startGame(), 2000);
   };
   const addPoint = (id) => {
-    sockets = sockets.map((aSocket) => {
-      if (aSocket.id === id) {
-        aSocket.points += 10;
+    players = players.map((player) => {
+      if (player.id === id) {
+        player.points += 10;
       }
-      return aSocket;
+      return player;
     });
     sendPlayerUpdate();
     endGame();
@@ -55,7 +78,8 @@ const socketController = (socket, io) => {
     if (!nicknames.includes(nickname)) {
       socket.nickname = nickname;
       nicknames.push(nickname);
-      sockets.push({ id: socket.id, points: 0, nickname: nickname });
+      players.push({ id: socket.id, points: 0, nickname: nickname });
+      sockets.push(socket);
       socket.emit(events.loggedIn);
       broadcast(events.newUser, { nickname });
       sendPlayerUpdate();
@@ -67,9 +91,10 @@ const socketController = (socket, io) => {
 
   socket.on(events.disconnect, () => {
     broadcast(events.disconnected, { nickname: socket.nickname });
-    sockets = sockets.filter((aSocket) => aSocket.id != socket.id);
+    players = players.filter((player) => player.id != socket.id);
+    sockets = sockets.filter((aSocket) => aSocket != socket.id);
     nicknames = nicknames.filter((nickname) => nickname != socket.nickname);
-    if (sockets.length == 1) {
+    if (players.length == 1) {
       endGame();
     } else if (leader) {
       if (socket.id == leader.id) endGame();
