@@ -34,7 +34,6 @@ const handleShowLeader = (leaderNickname, show, leaderColor) => {
   for (const playerelement of playerElements) {
     const nickname = playerelement.childNodes[0];
     if (nickname.innerText.slice(0, -2) === leaderNickname) {
-      console.dir(nickname);
       if (show) {
         playerelement.style.backgroundColor = leaderColor;
         nickname.style.color = "white";

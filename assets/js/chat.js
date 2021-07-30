@@ -10,7 +10,6 @@ const appendMsg = (text, nickname, color, underlined) => {
   const msgText = document.createElement("span");
   const underline = document.createElement("div");
   if (underlined) {
-    console.log(underlined);
     underline.style.backgroundColor = color;
     underline.classList.add("underline");
     li.appendChild(underline);
