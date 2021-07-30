@@ -1,6 +1,15 @@
 import events from "./events";
 import { chooseWord } from "./words";
 
+const initialColors = [
+  "rgb(255, 59, 48)",
+  "rgb(255, 149, 0)",
+  "rgb(255, 204, 0)",
+  "rgb(76, 217, 100)",
+  "rgb(90, 200, 250)",
+  "rgb(0, 122, 255)",
+  "rgb(131, 86, 214)",
+];
 let players = [];
 let sockets = [];
 let nicknames = [];
@@ -9,8 +18,21 @@ let word = null;
 let leader = null;
 let timeleft = 0;
 let interval = null;
+let colors = initialColors;
 
 const chooseLeader = () => players[Math.floor(Math.random() * players.length)];
+
+const genRGB = () => Math.ceil(Math.random() * 200);
+
+const getRGB = () => `rgb(${genRGB()}, ${genRGB()}, ${genRGB()})`;
+
+const chooseColor = () => {
+  let color = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
+  if (color === undefined) {
+    color = getRGB();
+  }
+  return color;
+};
 
 const socketController = (socket, io) => {
   const broadcast = (event, data) => socket.broadcast.emit(event, data);
@@ -33,7 +55,13 @@ const socketController = (socket, io) => {
       }
       superBroadcast(events.gameStarting);
       setTimeout(() => {
-        superBroadcast(events.gameStarted);
+        if (leader) {
+          superBroadcast(events.gameStarted, {
+            leaderNickname: leader.nickname,
+            show: true,
+            leaderColor: leader.color,
+          });
+        }
         io.to(leader.id).emit(events.leaderNotif, { word });
         timeleft = 40;
         handleTimeleft();
@@ -52,11 +80,12 @@ const socketController = (socket, io) => {
       sockets.forEach((aSocket) => {
         if (aSocket.id !== leader.id) aSocket.leave("not leader");
       });
+      superBroadcast(events.gameEnded, {
+        leaderNickname: leader.nickname,
+        show: false,
+        leaderColor: leader.color,
+      });
     }
-    superBroadcast(events.gameEnded, {
-      word,
-      leaderNickname: `${leader ? leader.nickname : null}`,
-    });
     if (interval !== null) {
       clearInterval(interval);
       interval = null;
@@ -76,9 +105,16 @@ const socketController = (socket, io) => {
 
   socket.on(events.setNickname, ({ nickname }) => {
     if (!nicknames.includes(nickname)) {
+      const playerColor = chooseColor();
       socket.nickname = nickname;
+      socket.color = playerColor;
       nicknames.push(nickname);
-      players.push({ id: socket.id, points: 0, nickname: nickname });
+      players.push({
+        id: socket.id,
+        points: 0,
+        nickname: nickname,
+        color: playerColor,
+      });
       sockets.push(socket);
       socket.emit(events.loggedIn);
       broadcast(events.newUser, { nickname });
@@ -92,8 +128,12 @@ const socketController = (socket, io) => {
   socket.on(events.disconnect, () => {
     broadcast(events.disconnected, { nickname: socket.nickname });
     players = players.filter((player) => player.id != socket.id);
-    sockets = sockets.filter((aSocket) => aSocket != socket.id);
+    sockets = sockets.filter((aSocket) => aSocket.id != socket.id);
     nicknames = nicknames.filter((nickname) => nickname != socket.nickname);
+    if (!colors.includes(socket.color)) {
+      colors.push(socket.color);
+    }
+    if (colors.length > 7) colors = initialColors;
     if (players.length == 1) {
       endGame();
     } else if (leader) {
@@ -103,11 +143,18 @@ const socketController = (socket, io) => {
   });
 
   socket.on(events.sendMsg, ({ message }) => {
-    broadcast(events.newMsg, { message, nickname: socket.nickname });
+    superBroadcast(events.newMsg, {
+      message,
+      nickname: socket.nickname,
+      color: socket.color,
+      underlined: message === word ? true : false,
+    });
     if (message === word) {
       superBroadcast(events.newMsg, {
-        message: `Winner is: ${socket.nickname}, word was: ${word}`,
+        message: `Winner is: ${socket.nickname},\nword was: ${word}`,
         nickname: "Bot",
+        color: "#2c2c2c",
+        underlined: false,
       });
       addPoint(socket.id);
     }

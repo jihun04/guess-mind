@@ -4,7 +4,7 @@ import { initSockets } from "./sockets";
 const body = document.body;
 const loginForm = document.getElementById("jsLogin");
 
-export const NICKNAME = "nickname";
+const NICKNAME = "nickname";
 const LOGGED_OUT = "loggedOut",
   LOGGED_IN = "loggedIn";
 

@@ -9,7 +9,6 @@ const mode = document.getElementById("jsMode");
 const ctx = canvas.getContext("2d");
 
 let INITIAL_COLOR = "#2c2c2c";
-let saveLink = null;
 
 canvas.width = 450;
 canvas.height = 450;
@@ -124,12 +123,6 @@ export const enableCanvas = () => {
 export const hideCanvasControls = () => (controls.style.display = "none");
 
 export const showCanvasControls = () => (controls.style.display = "flex");
-
-export const saveAnchor = (word) => {
-  saveLink = document.createElement("a");
-  saveLink.download = `${word}.png`;
-  saveLink.href = canvas.toDataURL();
-};
 
 export const resetCanvas = () => fill("#fff");
 

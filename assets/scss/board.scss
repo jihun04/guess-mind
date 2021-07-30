@@ -4,7 +4,7 @@
   grid-auto-rows: 36px;
   grid-gap: 10px;
   margin-bottom: 30px;
-  span {
+  div {
     box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
     background-color: white;
     padding: 10px;
@@ -12,6 +12,11 @@
     border-radius: 20px;
     margin-right: 20px;
     width: 100%;
+    font-size: 18px;
+    transition: background-color 0.5s ease-in-out;
+    span {
+      transition: color 0.5s ease-in-out;
+    }
     &:last-child {
       margin-right: 0;
     }
